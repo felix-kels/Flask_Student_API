@@ -18,6 +18,14 @@ student = api.model('Student', {
     'email': fields.String(required=True, description='The student email address')
 })
 
+# Defining the Course Model
+course = api.model('Course', {
+    'id': fields.Integer(required=True, description='The course ID'),
+    'name': fields.String(required=True, description='The course name'),
+    'teacher': fields.String(required=True, description='The course teacher'),
+    'students': fields.List(fields.Nested(student), description='The students registered for the course')
+})
+
 
 # Creating Endpoints for Creating, Reading, Updating, and Deleting Students.
 parser = reqparse.RequestParser()
@@ -34,6 +42,9 @@ class StudentList(Resource):
     @api.expect(parser)
     @api.marshal_with(student, code=201)
     def post(self):
+        pass
+
+    def __delete__(self, id):
         pass
 
 
@@ -54,26 +65,53 @@ class Student(Resource):
         pass
 
 
-# Defining the Course Model
-course = api.model('Course', {
-    'id': fields.Integer(required=True, description='The course ID'),
-    'name': fields.String(required=True, description='The course name'),
-    'teacher': fields.String(required=True, description='The course teacher'),
-    'students': fields.List(fields.Nested(student), description='The students registered for the course')
-})
+# # Defining the Course Model
+# course = api.model('Course', {
+#     'id': fields.Integer(required=True, description='The course ID'),
+#     'name': fields.String(required=True, description='The course name'),
+#     'teacher': fields.String(required=True, description='The course teacher'),
+#     'students': fields.List(fields.Nested(student), description='The students registered for the course')
+# })
 
 
-# Creating Endpoints for Retrieving Courses and Registered Students
-@api.marshal_list_with(course)
-def get(self):
-    pass
+@api.route('/courses')
+class CourseList(Resource):
+    @api.marshal_with(course)
+    def get(self):
+        # returns all courses
+        pass
+
+    @api.expect(course)
+    @api.marshal_list_with(course)
+    def post(self):
+        pass
+
+
+@api.route('/courses/int:id')
+@api.response(404, 'Course not found')
+class Course(Resource):
+    @api.marshal_list_with(course)
+    def get(self, id):pass
+
+    @api.expect(course)
+    @api.marshal_with(course)
+    def post(self, id):
+        pass
+
+    def delete(self, id):
+        pass
 
 
 @api.route('/courses/int:id/students')
 @api.response(404, 'Course not found')
 class CourseStudents(Resource):
     @api.marshal_list_with(student)
-    def get(self, id):pass
+    def get(self, id): pass
+
+    @api.expect(student)
+    @api.marshal_with(course)
+    def post(self, id):
+        pass
 
 
 # Define the Grade Model
@@ -84,13 +122,43 @@ grade = api.model('Grade', {
 })
 
 
+@api.route('/grades')
+class GradeList(Resource):
+    @api.expect(grade)
+    @api.marshal_with(grade)
+    def post(self):
+        # returns all courses
+        pass
+
+
+@api.route('/student/int: id/grades')
+class StudentGrades(Resource):
+    @api.marshal_list_with(grade)
+    def get(self, id): pass
+
+    def delete (self, id):
+        pass
+
+
+@api.route('/course/int: id/grades')
+class CourseGrades(Resource):
+    @api.marshal_list_with(grade)
+    def get(self, id): pass
+
+
 # Implementing The GPA Calculation Functionality
 @api.route('/students/<int:id>/gpa')
 @api.response(404, 'Student not found')
 class StudentGPA(Resource):
     @api.doc(params={'courses': 'A comma-separated list of course IDs'})
+    @api.marshal_with(grade)
     def get(self, id):
         pass
+
+    def __delete__(self, id):
+        # delete all grades for a specific student
+        pass
+
 
 # Implementing Authentication and Authorization
 
