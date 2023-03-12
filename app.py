@@ -95,7 +95,7 @@ class Course(Resource):
 
     @api.expect(course)
     @api.marshal_with(course)
-    def post(self, id):
+    def put(self, id):
         pass
 
     def delete(self, id):
