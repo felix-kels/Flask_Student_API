@@ -18,6 +18,12 @@ student = api.model('Student', {
     'email': fields.String(required=True, description='The student email address')
 })
 
+parser = reqparse.RequestParser()
+parser.add_argument('id', type=int, required=True, help='The student ID')
+parser.add_argument('name', type=str, required=True, help='The student name')
+parser.add_argument('email', type=str, required=True, help='The student email address')
+
+
 # Defining the Course Model
 course = api.model('Course', {
     'id': fields.Integer(required=True, description='The course ID'),
@@ -26,11 +32,14 @@ course = api.model('Course', {
     'students': fields.List(fields.String, description='The students registered for the course')
 })
 
+parser = reqparse.RequestParser()
+parser.add_argument('id', type=int, required=True, help='The course ID')
+parser.add_argument('name', type=str, required=True, help='The Course name')
+parser.add_argument('teacher', type=str, required=True, help='The course teacher')
+parser.add_argument('students', type=str, required=True, help='The students registered in the course')
+
 
 # Creating Endpoints for Creating, Reading, Updating, and Deleting Students.
-parser = reqparse.RequestParser()
-parser.add_argument('name', type=str, required=True, help='The student name')
-parser.add_argument('email', type=str, required=True, help='The student email address')
 
 
 @api.route('/students')
