@@ -23,7 +23,7 @@ course = api.model('Course', {
     'id': fields.Integer(required=True, description='The course ID'),
     'name': fields.String(required=True, description='The course name'),
     'teacher': fields.String(required=True, description='The course teacher'),
-    'students': fields.List(fields.Nested(student), description='The students registered for the course')
+    'students': fields.List(fields.String, description='The students registered for the course')
 })
 
 
