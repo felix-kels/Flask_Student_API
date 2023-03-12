@@ -18,10 +18,10 @@ student = api.model('Student', {
     'email': fields.String(required=True, description='The student email address')
 })
 
-parser = reqparse.RequestParser()
-parser.add_argument('id', type=int, required=True, help='The student ID')
-parser.add_argument('name', type=str, required=True, help='The student name')
-parser.add_argument('email', type=str, required=True, help='The student email address')
+student_parser = reqparse.RequestParser()
+student_parser.add_argument('id', type=int, required=True, help='The student ID')
+student_parser.add_argument('name', type=str, required=True, help='The student name')
+student_parser.add_argument('email', type=str, required=True, help='The student email address')
 
 
 # Defining the Course Model
@@ -64,7 +64,7 @@ class Student(Resource):
     def get(self, id):
         pass
 
-    @api.expect(parser)
+    @api.expect(student_parser)
     @api.marshal_with(student)
     def put(self, id):
         pass
