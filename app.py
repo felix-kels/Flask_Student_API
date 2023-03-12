@@ -93,7 +93,7 @@ class Course(Resource):
     @api.marshal_list_with(course)
     def get(self, id):pass
 
-    @api.expect(course)
+    @api.expect(parser)
     @api.marshal_with(course)
     def put(self, id):
         pass
