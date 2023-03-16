@@ -1,4 +1,4 @@
-from api import create_app, student_ns, course_ns
+from api import create_app, student_ns, course_ns, auth_ns
 from api.config import Config
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_restx import Api, fields, Resource, reqparse
@@ -6,7 +6,11 @@ from flask_restx import Api, fields, Resource, reqparse
 
 config = Config
 
-app, api = create_app(config=config)
+# The create_app function does not return a tuple so I removed the second variable api
+# And in the places where the api was used, I replaced it with either course_ns or student_ns or auth_ns
+# Eg. @api.route was now @student_ns.route.
+
+app = create_app(config=config)
 
 student_parser = reqparse.RequestParser()
 student_parser.add_argument('name', type=str, required=True, help='Student name is required')
@@ -22,14 +26,14 @@ course_parser.add_argument('teacher', type=str, required=True, help='Teacher nam
 course_parser.add_argument('students', type=list, location='json', help='List of student IDs is required')
 
 
-student_model = api.model('Student', {
+student_model = student_ns.model('Student', {
     'name': fields.String(required=True, description='Student Name'),
     'id': fields.Integer(required=True, description='Student ID'),
     'email': fields.String(required=True, description='Student Email')
 })
 
 
-course_model = api.model('Course', {
+course_model = course_ns.model('Course', {
     'name': fields.String(required=True, description='Course Name'),
     'id': fields.Integer(required=True, description='Course ID'),
     'teacher': fields.String(required=True, description='Teacher Name'),
@@ -120,25 +124,25 @@ class CourseStudents(Resource):
         pass
 
 
-grade_model = api.model('Grade', {
+grade_model = student_ns.model('Grade', {
     'student_id': fields.String(required=True),
     'course_id': fields.String(required=True),
     'grade': fields.Float(required=True)
 })
 
 
-@api.route('/grades')
+@student_ns.route('/grades')
 class GradeList(Resource):
-    @api.expect(grade_model)
-    @api.marshal_with(grade_model)
+    @student_ns.expect(grade_model)
+    @student_ns.marshal_with(grade_model)
     def post(self):
         # Add a grade for a specific student in a specific course
         pass
 
 
-@api.route('/students/<id>/grades')
+@student_ns.route('/students/<id>/grades')
 class StudentGrades(Resource):
-    @api.marshal_with(grade_model)
+    @student_ns.marshal_with(grade_model)
     def get(self, id):
         # Return all grades for a specific student
         pass
@@ -148,15 +152,15 @@ class StudentGrades(Resource):
         pass
 
 
-@api.route('/courses/<id>/grades')
+@course_ns.route('/courses/<id>/grades')
 class CourseGrades(Resource):
-    @api.marshal_with(grade_model)
+    @course_ns.marshal_with(grade_model)
     def get(self, id):
         # Return all grades for a specific course
         pass
 
 
-@api.route('/students/<id>/gpa')
+@student_ns.route('/students/<id>/gpa')
 class StudentGPA(Resource):
     def get(self, id):
         # Calculate the GPA for a specific student
@@ -175,14 +179,14 @@ class StudentGPA(Resource):
 #     return user['id']
 
 
-@api.route('/login')
+@auth_ns.route('/login')
 class Login(Resource):
     def post(self):
         # Authenticate and generate JWT token
         pass
 
 
-@api.route('/protected')
+@auth_ns.route('/protected')
 class Protected(Resource):
     @jwt_required
     def get(self):

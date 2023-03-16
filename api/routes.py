@@ -11,7 +11,7 @@ student_ns = Namespace('students', description='Student Field')
 course_ns = Namespace('courses', description='Course Field')
 
 # Initialize schemas
-student_schema = StudentSchema()
+student_schema = StudentSchema(many=False)
 students_schema = StudentSchema(many=True)
 course_schema = CourseSchema()
 courses_schema = CourseSchema(many=True)
@@ -49,10 +49,10 @@ class StudentListResource(Resource):
 class StudentResource(Resource):
     @jwt_required()
     def get(self, student_id):
-        student = Student.query.all(student_id)
+        student = Student.query.get(student_id) # to get one object from the database use query.get() 
         if not student:
             return {"message": "Student not found"}, 404
-        return students_schema.dump(student), 200
+        return student_schema.dump(student), 200
 
     @jwt_required()
     def put(self, student_id):

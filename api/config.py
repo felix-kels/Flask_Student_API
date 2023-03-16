@@ -16,3 +16,10 @@ class Config:
     # JWT configuration
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'your-jwt-secret-key'
     JWT_ACCESS_TOKEN_EXPIRES = 3600 # 1 hour
+
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'test.db')
+
+
