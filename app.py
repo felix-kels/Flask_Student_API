@@ -1,184 +1,184 @@
-from flask import Flask
-from flask_restx import Api
-from flask_restx import fields
-from flask_restx import Resource, reqparse
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-
-app = Flask(__name__)
-api = Api(app)
-
-if __name__ == '__main__':
-    app.run(debug=True)
+from api import create_app, student_ns, course_ns
+from api.config import Config
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_restx import Api, fields, Resource, reqparse
 
 
-# Defining the Student Model.
-student = api.model('Student', {
-    'id': fields.Integer(required=True, description='The student ID'),
-    'name': fields.String(required=True, description='The student name'),
-    'email': fields.String(required=True, description='The student email address')
-})
+config = Config
+
+app, api = create_app(config=config)
 
 student_parser = reqparse.RequestParser()
-student_parser.add_argument('id', type=int, required=True, help='The student ID')
-student_parser.add_argument('name', type=str, required=True, help='The student name')
-student_parser.add_argument('email', type=str, required=True, help='The student email address')
+student_parser.add_argument('name', type=str, required=True, help='Student name is required')
+student_parser.add_argument('id', type=int, required=True, help='Student ID is required')
+student_parser.add_argument('email', type=str, required=True, help='Student email is required')
+student_parser.add_argument('courses', type=list, location='json', help='List of course IDs is required')
 
 
-# Defining the Course Model
-course = api.model('Course', {
-    'id': fields.Integer(required=True, description='The course ID'),
-    'name': fields.String(required=True, description='The course name'),
-    'teacher': fields.String(required=True, description='The course teacher'),
-    'students': fields.List(fields.String, description='The students registered for the course')
+course_parser = reqparse.RequestParser()
+course_parser.add_argument('name', type=str, required=True, help='Course name is required')
+course_parser.add_argument('id', type=int, required=True, help='Course ID is required')
+course_parser.add_argument('teacher', type=str, required=True, help='Teacher name is required')
+course_parser.add_argument('students', type=list, location='json', help='List of student IDs is required')
+
+
+student_model = api.model('Student', {
+    'name': fields.String(required=True, description='Student Name'),
+    'id': fields.Integer(required=True, description='Student ID'),
+    'email': fields.String(required=True, description='Student Email')
 })
 
-parser = reqparse.RequestParser()
-parser.add_argument('id', type=int, required=True, help='The course ID')
-parser.add_argument('name', type=str, required=True, help='The Course name')
-parser.add_argument('teacher', type=str, required=True, help='The course teacher')
-parser.add_argument('students', type=str, required=True, help='The students registered in the course')
+
+course_model = api.model('Course', {
+    'name': fields.String(required=True, description='Course Name'),
+    'id': fields.Integer(required=True, description='Course ID'),
+    'teacher': fields.String(required=True, description='Teacher Name'),
+    'students': fields.List(fields.Nested(student_model), description='List of Students')
+})
 
 
-# Creating Endpoints for Creating, Reading, Updating, and Deleting Students.
-
-
-@api.route('/students')
+@student_ns.route('/students')
 class StudentList(Resource):
-    @api.marshal_list_with(student)
+    @student_ns.marshal_with(student_model)
     def get(self):
+        # Return all students
         pass
 
-    @api.expect(parser)
-    @api.marshal_with(student, code=201)
+    @student_ns.expect(student_model)
+    @student_ns.marshal_with(student_model)
     def post(self):
+        # args = student_parser.parse_args()
+        # name = args['name']
+        # id = args['id']
+        # email = args['email']
+        # Create a new student
         pass
 
-    def __delete__(self, id):
-        pass
 
-
-@api.route('/students/<int:id>')
-@api.response(404, 'Student not found')
+@student_ns.route('/students/<id>')
 class Student(Resource):
-    @api.marshal_with(student)
+    @student_ns.marshal_with(student_model)
     def get(self, id):
+        # Return a specific student
         pass
 
-    @api.expect(student_parser)
-    @api.marshal_with(student)
+    @student_ns.expect(student_parser)
+    @student_ns.marshal_with(student_model)
     def put(self, id):
+        # Update a specific student
         pass
 
-    @api.response(204, 'Student deleted')
+    @student_ns.response(204, "Student Deleted Successfully")
     def delete(self, id):
+        # Delete a specific student
         pass
 
 
-# # Defining the Course Model
-# course = api.model('Course', {
-#     'id': fields.Integer(required=True, description='The course ID'),
-#     'name': fields.String(required=True, description='The course name'),
-#     'teacher': fields.String(required=True, description='The course teacher'),
-#     'students': fields.List(fields.Nested(student), description='The students registered for the course')
-# })
-
-
-@api.route('/courses')
+@course_ns.route('/courses')
 class CourseList(Resource):
-    @api.marshal_with(course)
+    @course_ns.marshal_with(course_model)
     def get(self):
-        # returns all courses
+        # Return all courses
         pass
 
-    @api.expect(course)
-    @api.marshal_list_with(course)
+    @course_ns.expect(course_model)
+    @course_ns.marshal_with(course_model)
     def post(self):
         pass
 
 
-@api.route('/courses/int:id')
-@api.response(404, 'Course not found')
+@course_ns.route('/courses/<id>')
 class Course(Resource):
-    @api.marshal_list_with(course)
-    def get(self, id):pass
+    @course_ns.marshal_with(course_model)
+    def get(self, id):
+        # Return a specific course
+        pass
 
-    @api.expect(parser)
-    @api.marshal_with(course)
+    @course_ns.expect(course_parser)
+    @course_ns.marshal_with(course_model)
     def put(self, id):
+        # Update a specific course
         pass
 
+    @course_ns.response(204, "Course Deleted Successfully")
     def delete(self, id):
+        # Delete a specific course
         pass
 
 
-@api.route('/courses/int:id/students')
-@api.response(404, 'Course not found')
+@course_ns.route('/courses/<id>/students')
 class CourseStudents(Resource):
-    @api.marshal_list_with(student)
-    def get(self, id): pass
+    @course_ns.marshal_with(student_model)
+    def get(self, id):
+        # Return all students registered in a specific course
+        pass
 
-    @api.expect(student)
-    @api.marshal_with(course)
+    @course_ns.expect(student_model)
+    @course_ns.marshal_with(student_model)
     def post(self, id):
+        # Register a new student for a specific course
         pass
 
 
-# Define the Grade Model
-grade = api.model('Grade', {
-    'course_id': fields.Integer(required=True, description='The course ID'),
-    'student_id': fields.Integer(required=True, description='The student ID'),
-    'grade': fields.Float(required=True, description='The student grade')
+grade_model = api.model('Grade', {
+    'student_id': fields.String(required=True),
+    'course_id': fields.String(required=True),
+    'grade': fields.Float(required=True)
 })
 
 
 @api.route('/grades')
 class GradeList(Resource):
-    @api.expect(grade)
-    @api.marshal_with(grade)
+    @api.expect(grade_model)
+    @api.marshal_with(grade_model)
     def post(self):
-        # returns all courses
+        # Add a grade for a specific student in a specific course
         pass
 
 
-@api.route('/student/int: id/grades')
+@api.route('/students/<id>/grades')
 class StudentGrades(Resource):
-    @api.marshal_list_with(grade)
-    def get(self, id): pass
-
-    def delete (self, id):
-        pass
-
-
-@api.route('/course/int: id/grades')
-class CourseGrades(Resource):
-    @api.marshal_list_with(grade)
-    def get(self, id): pass
-
-
-# Implementing The GPA Calculation Functionality
-@api.route('/students/<int:id>/gpa')
-@api.response(404, 'Student not found')
-class StudentGPA(Resource):
-    @api.doc(params={'courses': 'A comma-separated list of course IDs'})
-    @api.marshal_with(grade)
+    @api.marshal_with(grade_model)
     def get(self, id):
+        # Return all grades for a specific student
         pass
 
-    def __delete__(self, id):
-        # delete all grades for a specific student
+    def delete(self, id):
+        # Delete all grades for a specific student
         pass
 
 
-# Implementing Authentication and Authorization
+@api.route('/courses/<id>/grades')
+class CourseGrades(Resource):
+    @api.marshal_with(grade_model)
+    def get(self, id):
+        # Return all grades for a specific course
+        pass
 
 
-app.config['JWT_SECRET_KEY'] = 'super-secret-key'
-jwt = JWTManager(app)
+@api.route('/students/<id>/gpa')
+class StudentGPA(Resource):
+    def get(self, id):
+        # Calculate the GPA for a specific student
+        pass
+#
+#
+# @jwt._user_claims_callback
+# def add_claims_to_access_token(identity):
+#     # Retrieve user info from database based on the identity
+#     user = User.query.filter_by(id=identity).first()
+#     return {'name': 'role', 'value': user.role}
+#
+#
+# @jwt.user_identity_loader
+# def user_identity_lookup(user):
+#     return user['id']
 
 
 @api.route('/login')
 class Login(Resource):
     def post(self):
+        # Authenticate and generate JWT token
         pass
 
 
@@ -187,4 +187,10 @@ class Protected(Resource):
     @jwt_required
     def get(self):
         current_user = get_jwt_identity()
+        # Access protected resource
         pass
+
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5001)
+
