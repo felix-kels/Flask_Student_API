@@ -66,7 +66,7 @@ flask db upgrade
 
 
 ## Run the application
-Run Flask
+flask run
 
 
 ## Testing
